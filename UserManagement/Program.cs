@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using UserManagement.Data;
+using UserManagement.Data.Seed;
+using UserManagement.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +18,20 @@ builder.Services.AddDbContext<AppDbContext>(option =>
     option.UseSqlServer(builder.Configuration.GetConnectionString("Default"));
 });
 
+//Password hasher service
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+
 var app = builder.Build();
+
+//Seed Data (comment to reduce loading speed)
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var dbContext = services.GetRequiredService<AppDbContext>();
+    var passwordHasher = services.GetRequiredService<IPasswordHasher<User>>();
+
+    await DbInitializer.InitializeAsync(dbContext, passwordHasher);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
