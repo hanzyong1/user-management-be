@@ -2,8 +2,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using UserManagement.Data;
+using UserManagement.Data.Repositories;
 using UserManagement.Data.Seed;
 using UserManagement.Models;
+using UserManagement.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,11 @@ builder.Services.AddDbContext<AppDbContext>(option =>
 
 //Password hasher service
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+
+//Repositories
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+
 
 var app = builder.Build();
 
