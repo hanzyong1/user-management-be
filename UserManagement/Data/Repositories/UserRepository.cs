@@ -16,5 +16,10 @@ namespace UserManagement.Data.Repositories
         {
             return await _context.Users.FirstOrDefaultAsync(e => e.Id == id);
         }
+
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        }
     }
 }
