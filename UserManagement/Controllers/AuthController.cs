@@ -56,6 +56,16 @@ namespace UserManagement.Controllers
             return Ok(new { message = "Logged out" });
         }
 
-
+        //Validates that the user is currently logged in
+        [Authorize]
+        [HttpGet("me")]
+        public ActionResult Me()
+        {
+            return Ok(new
+            {
+                id = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value,
+                email = User.FindFirst(JwtRegisteredClaimNames.Email)?.Value
+            });
+        }
     }
 }
