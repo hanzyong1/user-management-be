@@ -1,4 +1,5 @@
 ﻿using UserManagement.Data.Repositories;
+using UserManagement.Dtos.UserDto;
 using UserManagement.Models;
 
 namespace UserManagement.Services
@@ -12,9 +13,22 @@ namespace UserManagement.Services
             _userRepository = userRepository;
         }
 
-        public async Task<User?> GetUserByIdAsync(int id)
+        public async Task<GetUserDto?> GetUserByIdAsync(int id)
         {
-            return await _userRepository.GetUserByIdAsync(id);
+            var user = await _userRepository.GetUserByIdAsync(id);
+
+            if (user == null) 
+            {
+                return null;
+            }
+
+            return new GetUserDto
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                ProfilePicPath = user.ProfilePicPath
+            };
         }
     }
 }

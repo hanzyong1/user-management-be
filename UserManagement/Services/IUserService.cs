@@ -1,9 +1,10 @@
-﻿using UserManagement.Models;
+﻿using UserManagement.Dtos.UserDto;
+using UserManagement.Models;
 
 namespace UserManagement.Services
 {
     public interface IUserService
     {
-        Task<User?> GetUserByIdAsync(int id);
+        Task<GetUserDto?> GetUserByIdAsync(int id);
     }
 }
