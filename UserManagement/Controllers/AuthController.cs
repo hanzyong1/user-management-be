@@ -33,8 +33,8 @@ namespace UserManagement.Controllers
             Response.Cookies.Append("jwt", token, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true, 
-                SameSite = SameSiteMode.None,    
+                Secure = true,
+                SameSite = SameSiteMode.None,
                 Path = "/",
                 Expires = DateTime.UtcNow.AddMinutes(double.Parse(_configuration["Jwt:ExpiresMinutes"] ?? "60"))
             });
@@ -42,6 +42,20 @@ namespace UserManagement.Controllers
             return Ok(new { message = "Logged in" });
         }
 
-        
+        //Log out and remove the jwt token from cookie
+        [HttpPost("logout")]
+        public ActionResult Logout()
+        {
+            Response.Cookies.Delete("jwt", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None
+            });
+
+            return Ok(new { message = "Logged out" });
+        }
+
+
     }
 }
