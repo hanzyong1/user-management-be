@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using UserManagement.Services;
 
 namespace UserManagement.Controllers
@@ -14,15 +17,23 @@ namespace UserManagement.Controllers
             _userService = userService;
         }
 
-        [HttpGet]
-        public async Task<ActionResult> GetUserByIdAsync(int id)
+        [Authorize]
+        [HttpGet("profile")]
+        public async Task<ActionResult> GetUserByIdAsync()
         {
-            var user = await _userService.GetUserByIdAsync(id);
-            
+            // Use ClaimTypes.NameIdentifier to get Id
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdStr))
+                return Unauthorized();
+
+            if (!int.TryParse(userIdStr, out int userId))
+                return Unauthorized();
+
+            var user = await _userService.GetUserByIdAsync(userId);
+
             if (user == null)
-            {
                 return NotFound();
-            }
 
             return Ok(user);
         }
