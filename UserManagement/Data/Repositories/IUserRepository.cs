@@ -6,5 +6,6 @@ namespace UserManagement.Data.Repositories
     {
         Task<User?> GetUserByIdAsync(int id);
         Task<User?> GetUserByEmailAsync(string email);
+        Task UpdateAsync(User user);
     }
 }
