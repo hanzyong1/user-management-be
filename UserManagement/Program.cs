@@ -1,4 +1,7 @@
+using Azure.Identity;
+using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -26,7 +29,7 @@ builder.Services.AddDbContext<AppDbContext>(option =>
 //Password hasher service
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
-// JWT Authentication
+//JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"]!;
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
@@ -84,7 +87,30 @@ builder.Services.AddCors(options =>
         });
 });
 
+//Azuure Blob
+builder.Services.AddSingleton(new BlobServiceClient(
+    new Uri(builder.Configuration["AzureBlob:ServiceUrl"]),
+    new DefaultAzureCredential()
+));
+
 var app = builder.Build();
+
+//Global Exception Handler
+app.UseExceptionHandler(options =>
+{
+    options.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        var exceptionFeature = context.Features.Get<IExceptionHandlerFeature>();
+        if (exceptionFeature is not null)
+        {
+            var error = new { message = "An unexpected error occurred" };
+            await context.Response.WriteAsJsonAsync(error);
+        }
+    });
+});
 
 //Seed Data (comment to reduce loading speed)
 using (var scope = app.Services.CreateScope())
@@ -96,7 +122,7 @@ using (var scope = app.Services.CreateScope())
     await DbInitializer.InitializeAsync(dbContext, passwordHasher);
 }
 
-// Configure the HTTP request pipeline.
+//Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
