@@ -1,4 +1,4 @@
-﻿namespace UserManagement.Dtos.UserDto
+﻿namespace UserManagement.Dtos.AuthDto
 {
     public class LoginUserDto
     {
