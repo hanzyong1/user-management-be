@@ -121,17 +121,17 @@ namespace UserManagement.Controllers
         }
         
         //Register new user
-        //[HttpPost("register")]
-        //public async Task<ActionResult> Register([FromBody] RegisterUserDto dto)
-        //{
-        //    var result = await _authService.RegisterAsync(dto);
+        [HttpPost("register")]
+        public async Task<ActionResult> Register([FromBody] RegisterUserDto dto)
+        {
+            var result = await _authService.RegisterAsync(dto);
 
-        //    if (result == false)
-        //    {
-        //        return BadRequest(new { message = "Email already taken" });
-        //    }
+            if (result == false)
+            {
+                return BadRequest(new { message = "Email already taken" });
+            }
 
-        //    return Ok(new { message = "Registered successfully" });
-        //}
+            return Ok(new { message = "Registered successfully" });
+        }
     }
 }
