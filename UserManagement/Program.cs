@@ -80,7 +80,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.WithOrigins("https://localhost:3000") 
+            policy.WithOrigins("https://localhost:3000", "https://user-management-fe-chi.vercel.app") 
                   .AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials(); 
