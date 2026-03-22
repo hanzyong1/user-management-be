@@ -48,26 +48,26 @@ namespace UserManagement.Services
             };
         }
 
-        //public async Task<bool> RegisterAsync(RegisterUserDto dto)
-        //{
-        //    var existingUser = await _userRepository.GetUserByEmailAsync(dto.Email);
+        public async Task<bool> RegisterAsync(RegisterUserDto dto)
+        {
+            var existingUser = await _userRepository.GetUserByEmailAsync(dto.Email);
 
-        //    if (existingUser != null)
-        //        return false;
+            if (existingUser != null)
+                return false;
 
-        //    var user = new User
-        //    {
-        //        FirstName = dto.FirstName,
-        //        LastName = dto.LastName,
-        //        Email = dto.Email,
-        //    };
+            var user = new User
+            {
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Email = dto.Email,
+            };
 
-        //    user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
+            user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
 
-        //    await _userRepository.AddAsync(user);
+            await _userRepository.AddAsync(user);
 
-        //    return true;
-        //}
+            return true;
+        }
 
         private string GenerateRefreshToken()
         {
