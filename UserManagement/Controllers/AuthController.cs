@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
-using UserManagement.Dtos.UserDto;
+using UserManagement.Dtos.AuthDto;
 using UserManagement.Services;
 
 namespace UserManagement.Controllers
@@ -21,31 +21,44 @@ namespace UserManagement.Controllers
 
         //Log in and sets a HttpOnly cookie with Jwt
         [HttpPost("login")]
-        public async Task<ActionResult> Login([FromBody] LoginUserDto request)
+        public async Task<ActionResult> Login([FromBody] LoginUserDto dto)
         {
-            var token = await _authService.LoginAsync(request);
+            var auth = await _authService.LoginAsync(dto);
 
-            if (token == null)
+            if (auth == null)
             {
                 return Unauthorized("Invalid credentials");
             }
 
-            Response.Cookies.Append("jwt", token, new CookieOptions
+            Response.Cookies.Append("jwt", auth.AccessToken, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.None,
                 Path = "/",
-                Expires = DateTime.UtcNow.AddMinutes(double.Parse(_configuration["Jwt:ExpiresMinutes"] ?? "60"))
+                Expires = DateTime.UtcNow.AddMinutes(double.Parse(_configuration["Jwt:ExpiresMinutes"] ?? "15"))
+            });
+
+            Response.Cookies.Append("refreshToken", auth.RefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Path = "/",
+                Expires = DateTime.UtcNow.AddDays(double.Parse(_configuration["Jwt:RefreshTokenExpiresDays"] ?? "7"))
             });
 
             return Ok(new { message = "Logged in" });
         }
 
-        //Log out and remove the jwt token from cookie
+        //Log out and remove the tokens from cookie
         [HttpPost("logout")]
-        public ActionResult Logout()
+        public async Task<ActionResult> Logout()
         {
+            var refresh = Request.Cookies["refreshToken"];
+
+            await _authService.LogoutAsync(refresh);
+
             Response.Cookies.Delete("jwt", new CookieOptions
             {
                 HttpOnly = true,
@@ -53,7 +66,46 @@ namespace UserManagement.Controllers
                 SameSite = SameSiteMode.None
             });
 
+            Response.Cookies.Delete("refreshToken", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None
+            });
+
             return Ok(new { message = "Logged out" });
+        }
+
+        [HttpPost("refresh")]
+        public async Task<ActionResult> Refresh()
+        {
+            var refresh = Request.Cookies["refreshToken"];
+            if (string.IsNullOrEmpty(refresh))
+                return Unauthorized();
+
+            var auth = await _authService.RefreshTokenAsync(refresh);
+            if (auth == null)
+                return Unauthorized();
+
+            Response.Cookies.Append("jwt", auth.AccessToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Path = "/",
+                Expires = DateTime.UtcNow.AddMinutes(double.Parse(_configuration["Jwt:ExpiresMinutes"] ?? "15"))
+            });
+
+            Response.Cookies.Append("refreshToken", auth.RefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Path = "/",
+                Expires = DateTime.UtcNow.AddDays(double.Parse(_configuration["Jwt:RefreshTokenExpiresDays"] ?? "7"))
+            });
+
+            return Ok(new { message = "Refreshed" });
         }
 
         //Validates that the user is currently logged in
@@ -67,5 +119,19 @@ namespace UserManagement.Controllers
                 email = User.FindFirst(JwtRegisteredClaimNames.Email)?.Value
             });
         }
+        
+        //Register new user
+        //[HttpPost("register")]
+        //public async Task<ActionResult> Register([FromBody] RegisterUserDto dto)
+        //{
+        //    var result = await _authService.RegisterAsync(dto);
+
+        //    if (result == false)
+        //    {
+        //        return BadRequest(new { message = "Email already taken" });
+        //    }
+
+        //    return Ok(new { message = "Registered successfully" });
+        //}
     }
 }
